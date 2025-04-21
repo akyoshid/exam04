@@ -248,6 +248,7 @@ int	exec_args(char **argv, char **envp, t_fd_set *fd_set)
 	int	sep_type;
 	int	ret;
 
+	argv++;
 	while (*argv != NULL)
 	{
 		cmd_args_count = count_cmd_args(argv, &sep_type);
