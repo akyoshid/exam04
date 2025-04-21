@@ -218,6 +218,8 @@ int	exec_cmd(char **cmd_args, char **envp)
 	pid_t	pid;
 	int		status;
 
+	if (cmd_args[0] == NULL)
+		return (EXIT_FAILURE);
 	if (strcmp(cmd_args[0], "cd") == 0)
 		return (cd_builtin(cmd_args));
 	pid = x_fork();
