@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   microshell.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: akyoshid <akyoshid@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/22 10:05:53 by akyoshid          #+#    #+#             */
+/*   Updated: 2025/04/22 10:07:36 by akyoshid         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 //
 //header
 //
@@ -24,7 +36,7 @@ typedef struct s_fd_set
 //
 //utils
 //
-int		ft_strlen(char *str)
+int	ft_strlen(char *str)
 {
 	int	i;
 
@@ -36,18 +48,18 @@ int		ft_strlen(char *str)
 	return (i);
 }
 
-#include <stdio.h>
+// #include <stdio.h>
 
 void	handle_fatal_error(char *err_code)
 {
-	//(void)err_code;
-	perror("");
-	write(2, err_code, 1);
+	(void)err_code;
+	// perror("");
+	// write(2, err_code, 1);
 	write(2, "error: fatal\n", 13);
 	exit(EXIT_FAILURE);
 }
 
-void x_write(int fd, void *buf, size_t count)
+void	x_write(int fd, void *buf, size_t count)
 {
 	if (write(fd, buf, count) == -1)
 		handle_fatal_error("1");
@@ -62,7 +74,7 @@ void	w_close(int fd)
 		handle_fatal_error("2");
 }
 
-pid_t x_fork(void)
+pid_t	x_fork(void)
 {
 	int	ret;
 
@@ -72,7 +84,7 @@ pid_t x_fork(void)
 	return (ret);
 }
 
-pid_t x_waitpid(pid_t pid, int *wstatus, int options)
+pid_t	x_waitpid(pid_t pid, int *wstatus, int options)
 {
 	int	ret;
 
@@ -82,9 +94,7 @@ pid_t x_waitpid(pid_t pid, int *wstatus, int options)
 	return (ret);
 }
 
-#include <stdio.h>
-
-int x_dup(int oldfd)
+int	x_dup(int oldfd)
 {
 	int	ret;
 
@@ -94,7 +104,7 @@ int x_dup(int oldfd)
 	return (ret);
 }
 
-void w_dup2(int oldfd, int newfd)
+void	w_dup2(int oldfd, int newfd)
 {
 	w_close(newfd);
 	if (oldfd == -1 || newfd == -1)
@@ -103,16 +113,11 @@ void w_dup2(int oldfd, int newfd)
 		handle_fatal_error("6");
 }
 
-void x_pipe(int pipefd[2])
+void	x_pipe(int pipefd[2])
 {
 	if (pipe(pipefd) == -1)
 		handle_fatal_error("7");
 }
-
-
-
-
-
 
 //
 //fd
@@ -152,11 +157,6 @@ void	setup_io(t_fd_set *fd_set, int sep_type)
 		w_close(pipe[1]);
 	}
 }
-
-
-
-
-
 
 //
 //main
@@ -219,7 +219,7 @@ int	exec_cmd(char **cmd_args, char **envp)
 	int		status;
 
 	if (cmd_args[0] == NULL)
-		return (EXIT_FAILURE);
+		return (EXIT_SUCCESS);
 	if (strcmp(cmd_args[0], "cd") == 0)
 		return (cd_builtin(cmd_args));
 	pid = x_fork();
@@ -233,15 +233,13 @@ int	exec_cmd(char **cmd_args, char **envp)
 			exit(EXIT_FAILURE);
 		}
 	}
+	x_waitpid(pid, &status, 0);
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	else if (WIFSIGNALED(status))
+		return (WTERMSIG(status) + 128);
 	else
-	{
-		x_waitpid(pid, &status, 0);
-		if (WIFEXITED(status))
-			return (WEXITSTATUS(status));
-		else if (WIFSIGNALED(status))
-			return (WTERMSIG(status) + 128);
-	}
-	return (EXIT_FAILURE);
+		return (EXIT_FAILURE);
 }
 
 int	exec_args(char **argv, char **envp, t_fd_set *fd_set)
@@ -250,7 +248,7 @@ int	exec_args(char **argv, char **envp, t_fd_set *fd_set)
 	int	sep_type;
 	int	ret;
 
-	argv++;
+	ret = EXIT_SUCCESS;
 	while (*argv != NULL)
 	{
 		cmd_args_count = count_cmd_args(argv, &sep_type);
@@ -272,12 +270,12 @@ int	main(int argc, char **argv, char **envp)
 {
 	t_fd_set	fd_set;
 	int			ret;
-	
+
 	if (argc == 1)
 		return (EXIT_SUCCESS);
 	init_fd_set(&fd_set);
+	argv++;
 	ret = exec_args(argv, envp, &fd_set);
 	close_fd_set(&fd_set);
 	return (ret);
 }
-
